@@ -68,6 +68,7 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/uploads/**': {
+      // @ts-expect-error: 'proxy' is valid at runtime but not in the RouteRules type definition
       proxy: `${process.env.NUXT_API_BASE || 'http://localhost:8000'}/uploads/**`,
     },
   },
