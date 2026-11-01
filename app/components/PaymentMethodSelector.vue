@@ -107,100 +107,9 @@
               </div>
             </div>
 
-            <!-- Quick Simulation Button for Testing -->
-            <button
-              type="button"
-              class="mt-3 w-full py-2 px-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
-              @click="$emit('simulateScan')"
-            >
-              <UIcon name="i-heroicons-device-phone-mobile" class="w-4 h-4 text-emerald-400" />
-              <span>Simulate Customer Scan / Pay</span>
-            </button>
           </div>
         </div>
       </div>
-
-      <!-- Option 2: Credit / Debit Card -->
-      <button
-        type="button"
-        class="w-full flex items-center justify-between p-3.5 rounded-2xl border bg-white transition-all text-left cursor-pointer group"
-        :class="modelValue === 'CARD'
-          ? 'border-gray-900 ring-1 ring-gray-900 shadow-xs'
-          : 'border-gray-200/90 hover:border-gray-300 hover:bg-gray-50/60'"
-        @click="$emit('update:modelValue', 'CARD')"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-[#005E7B] text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <UIcon name="i-heroicons-credit-card" class="w-5 h-5 text-white" />
-          </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold text-gray-900 group-hover:text-black">Credit/Debit Card</span>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <img src="/images/payments/visa.svg" alt="Visa" class="h-3 w-3 object-contain" >
-              <img src="/images/payments/mastercard.svg" alt="Mastercard" class="h-3 w-3 object-contain" >
-              <img src="/images/payments/unionpay.svg" alt="UnionPay" class="h-3 w-3 object-contain" >
-              <img src="/images/payments/jcb.svg" alt="JCB" class="h-3 w-3 object-contain" >
-            </div>
-          </div>
-        </div>
-        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-200 transition-colors">
-          <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
-        </div>
-      </button>
-
-      <!-- Option 3: Alipay -->
-      <button
-        type="button"
-        class="w-full flex items-center justify-between p-3.5 rounded-2xl border bg-white transition-all text-left cursor-pointer group"
-        :class="modelValue === 'ALIPAY'
-          ? 'border-gray-900 ring-1 ring-gray-900 shadow-xs'
-          : 'border-gray-200/90 hover:border-gray-300 hover:bg-gray-50/60'"
-        @click="$emit('update:modelValue', 'ALIPAY')"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center p-1 flex-shrink-0">
-            <img
-              src="/images/payments/alipay.svg"
-              alt="Alipay"
-              class="w-full h-full object-contain"
-            >
-          </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold text-gray-900 group-hover:text-black">Alipay</span>
-            <span class="text-[11px] text-gray-500">Scan to pay with Alipay</span>
-          </div>
-        </div>
-        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-200 transition-colors">
-          <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
-        </div>
-      </button>
-
-      <!-- Option 4: WeChat Pay -->
-      <button
-        type="button"
-        class="w-full flex items-center justify-between p-3.5 rounded-2xl border bg-white transition-all text-left cursor-pointer group"
-        :class="modelValue === 'WECHAT'
-          ? 'border-gray-900 ring-1 ring-gray-900 shadow-xs'
-          : 'border-gray-200/90 hover:border-gray-300 hover:bg-gray-50/60'"
-        @click="$emit('update:modelValue', 'WECHAT')"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center p-1 flex-shrink-0">
-            <img
-              src="/images/payments/wechat.svg"
-              alt="WeChat"
-              class="w-full h-full object-contain"
-            >
-          </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold text-gray-900 group-hover:text-black">WeChat</span>
-            <span class="text-[11px] text-gray-500">Scan to pay with WeChat</span>
-          </div>
-        </div>
-        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-200 transition-colors">
-          <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
-        </div>
-      </button>
     </div>
   </div>
 </template>
@@ -224,6 +133,5 @@ withDefaults(
 
 defineEmits<{
   (e: 'update:modelValue', value: string): void
-  (e: 'simulateScan'): void
 }>()
 </script>

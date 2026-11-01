@@ -11,6 +11,13 @@
           <NuxtLink to="/products" class="store-nav__link">Shop</NuxtLink>
         </nav>
         <div class="store-nav__actions">
+          <NuxtLink to="/checkout" class="store-nav__cart">
+            <UIcon name="i-heroicons-shopping-bag" class="w-4 h-4" />
+            <span>Bag</span>
+            <span v-if="cartStore.itemCount > 0" class="store-nav__badge">
+              {{ cartStore.itemCount }}
+            </span>
+          </NuxtLink>
           <NuxtLink v-if="authStore.isAuthenticated" to="/account" class="store-nav__user">
             <UIcon name="i-heroicons-user" class="w-4 h-4" />
             {{ authStore.currentCustomer?.full_name }}
@@ -38,8 +45,10 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 const authStore = useStoreAuthStore()
+const cartStore = useStoreCartStore()
 
 onMounted(() => {
+  cartStore.restoreCart()
   authStore.restoreSession()
   if (authStore.accessToken && !authStore.customer) {
     authStore.fetchCurrentCustomer()
@@ -72,6 +81,18 @@ onMounted(() => {
 }
 .store-nav__link:hover { color: var(--text-primary); }
 .store-nav__actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+.store-nav__cart {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
+  color: var(--text-primary); text-decoration: none; background: var(--surface-card);
+}
+.store-nav__badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--text-primary); color: var(--surface-card);
+  font-size: 11px; font-weight: 700;
+}
 .store-nav__user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); text-decoration: none; }
 .store-nav__user:hover { color: var(--text-primary); }
 
