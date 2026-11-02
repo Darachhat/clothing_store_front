@@ -69,6 +69,10 @@ export default defineNuxtConfig({
     storesDirs: ['./app/stores/**'],
   },
 
+  nitro: {
+    preset: process.env.NITRO_PRESET || (process.env.CF_PAGES ? 'cloudflare_pages' : undefined),
+  },
+
   routeRules: {
     '/uploads/**': {
       // @ts-expect-error: 'proxy' is valid at runtime but not in the RouteRules type definition
