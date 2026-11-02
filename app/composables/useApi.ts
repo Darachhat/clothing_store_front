@@ -1,100 +1,54 @@
-// Helper: inject X-System-Authorization server-side only
-function _injectSystemAuth(options: { headers?: HeadersInit | Headers }, sysAuth: string) {
-  if (!sysAuth) return
-  const headers = new Headers(options.headers || {})
-  headers.set('X-System-Authorization', sysAuth)
-  options.headers = headers
-}
+// Web Store API facade delegating to centralized client & endpoints
+import { createStoreApiClient } from '~/api/client'
+import { STORE_API_ENDPOINTS } from '~/api/endpoints'
 
-// Store API composable — wraps $fetch pointed at /api/store/v1/
+// Generic Store API composable
 export function useStoreApi() {
-  const config = useRuntimeConfig()
-  const authStore = useStoreAuthStore()
-
-  const apiFetch = $fetch.create({
-    baseURL: (import.meta.server
-      ? (config.apiBase || 'http://backend:8000')
-      : config.public.apiBase) as string,
-    onRequest({ options }) {
-      const token = authStore.accessToken
-      const headers = new Headers(options.headers || {})
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`)
-      }
-      // Attach system credential server-side only (credential stays private)
-      if (import.meta.server) {
-        const sysAuth = config.apiBaseAuth as string
-        if (sysAuth) headers.set('X-System-Authorization', sysAuth)
-      }
-      options.headers = headers
-    },
-    async onResponseError({ response }) {
-      if (response.status === 401) {
-        authStore.logout()
-      }
-    },
-  })
+  const client = createStoreApiClient()
 
   return {
-    apiFetch,
-    get: <T = any>(url: string, params?: Record<string, unknown>) =>
-      apiFetch<T>(url, { params, query: params }),
-    post: <T = any>(url: string, body?: unknown) =>
-      apiFetch<T>(url, { method: 'POST', body: body as any }),
+    baseURL: client.baseURL,
+    apiFetch: client.fetch,
+    get: client.get,
+    post: client.post,
+    patch: client.patch,
+    put: client.put,
+    delete: client.delete,
   }
 }
 
-// Catalog API — public endpoints, but still carries system credential on SSR
+// Catalog API — public endpoints with SSR system credential support
 export function useCatalogApi() {
-  const config = useRuntimeConfig()
-  const apiFetch = $fetch.create({
-    baseURL: (import.meta.server
-      ? (config.apiBase || 'http://backend:8000')
-      : config.public.apiBase) as string,
-    onRequest({ options }) {
-      if (import.meta.server) {
-        _injectSystemAuth(options, config.apiBaseAuth as string)
-      }
-    },
-  })
+  const { apiFetch } = useStoreApi()
 
   return {
     listProducts: (params?: Record<string, unknown>) =>
-      apiFetch('/api/store/v1/catalog/products', { params, query: params }),
+      apiFetch(STORE_API_ENDPOINTS.catalog.products, { params, query: params }),
     getProduct: (id: string) =>
-      apiFetch(`/api/store/v1/catalog/products/${id}`),
+      apiFetch(STORE_API_ENDPOINTS.catalog.productDetail(id)),
   }
 }
 
-// Auth API — customer register / login / refresh / me (carries system credential on SSR)
+// Auth API — customer register / login / refresh / me
 export function useStoreAuthApi() {
-  const config = useRuntimeConfig()
-  const apiFetch = $fetch.create({
-    baseURL: (import.meta.server
-      ? (config.apiBase || 'http://backend:8000')
-      : config.public.apiBase) as string,
-    onRequest({ options }) {
-      if (import.meta.server) {
-        _injectSystemAuth(options, config.apiBaseAuth as string)
-      }
-    },
-  })
+  const { apiFetch } = useStoreApi()
 
   return {
     login: <T = any>(username: string, password: string) =>
-      apiFetch<T>('/api/store/v1/auth/login', { method: 'POST', body: { username, password } }),
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.login, { method: 'POST', body: { username, password } }),
     register: (body: { username: string; email: string; full_name: string; password: string }) =>
-      apiFetch('/api/store/v1/auth/register', { method: 'POST', body }),
+      apiFetch(STORE_API_ENDPOINTS.auth.register, { method: 'POST', body }),
     refresh: <T = any>(refreshToken: string) =>
-      apiFetch<T>('/api/store/v1/auth/refresh', { method: 'POST', body: { refresh_token: refreshToken } }),
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.refresh, { method: 'POST', body: { refresh_token: refreshToken } }),
     me: <T = any>(token: string) =>
-      apiFetch<T>('/api/store/v1/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.me, { headers: { Authorization: `Bearer ${token}` } }),
   }
 }
 
 // Orders & Checkout API
 export function useStoreOrdersApi() {
   const { get, post } = useStoreApi()
+
   return {
     createOrder: (payload: {
       items: Array<{ variant_id: string; quantity: number }>
@@ -106,19 +60,19 @@ export function useStoreOrdersApi() {
       notes?: string
       coupon_code?: string
       create_draft?: boolean
-    }) => post('/api/store/v1/orders', payload),
+    }) => post(STORE_API_ENDPOINTS.orders.base, payload),
     createOrderKhqr: (orderId: string) =>
-      post<any>(`/api/store/v1/orders/${orderId}/khqr`),
+      post<any>(STORE_API_ENDPOINTS.orders.khqr(orderId)),
     getOrderPaymentStatus: (orderId: string, paymentId?: string) =>
-      get<any>(`/api/store/v1/orders/${orderId}/payment-status`, paymentId ? { payment_id: paymentId } : undefined),
+      get<any>(STORE_API_ENDPOINTS.orders.paymentStatus(orderId), paymentId ? { payment_id: paymentId } : undefined),
     completeOrder: (orderId: string, paymentMethod = 'ABA_KHQR') =>
-      post<any>(`/api/store/v1/orders/${orderId}/complete`, { payment_method: paymentMethod }),
+      post<any>(STORE_API_ENDPOINTS.orders.complete(orderId), { payment_method: paymentMethod }),
     validateCoupon: (code: string, cartTotal: number) =>
       post<{ valid: boolean; code: string; discount_amount: number; message: string }>(
-        '/api/store/v1/orders/validate-coupon',
+        STORE_API_ENDPOINTS.orders.validateCoupon,
         { code, cart_total: cartTotal }
       ),
-    listMyOrders: () => get<any[]>('/api/store/v1/orders'),
-    getOrder: (orderId: string) => get<any>(`/api/store/v1/orders/${orderId}`),
+    listMyOrders: () => get<any[]>(STORE_API_ENDPOINTS.orders.base),
+    getOrder: (orderId: string) => get<any>(STORE_API_ENDPOINTS.orders.detail(orderId)),
   }
 }

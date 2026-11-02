@@ -1,14 +1,16 @@
 // Web Store customer auth store
 import { defineStore } from 'pinia'
+import type { CustomerRegisterRequest } from '~/types/api.generated'
+import { STORE_API_ENDPOINTS } from '~/api/endpoints'
 
-interface Customer {
+export interface Customer {
   id: string
   username: string
   email: string
   full_name: string
 }
 
-interface StoreAuthState {
+export interface StoreAuthState {
   customer: Customer | null
   accessToken: string | null
   refreshToken: string | null
@@ -43,7 +45,7 @@ export const useStoreAuthStore = defineStore('storeAuth', {
       }
     },
 
-    async register(body: { username: string; email: string; full_name: string; password: string }) {
+    async register(body: CustomerRegisterRequest & { username: string }) {
       const authApi = useStoreAuthApi()
       return authApi.register(body)
     },
