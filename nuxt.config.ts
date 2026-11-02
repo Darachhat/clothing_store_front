@@ -1,7 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
+  compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+
+  experimental: {
+    appManifest: false,
+    emitRouteChunkError: 'automatic-immediate',
+  },
 
   future: {
     compatibilityVersion: 4,
@@ -37,14 +42,14 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    apiBase:     process.env.NUXT_API_BASE     || 'http://backend:8000',
+    apiBase:     process.env.NUXT_API_BASE     || 'https://api.kimvannak.store',
     // X-System-Authorization value injected server-side; never sent to browser
     apiBaseAuth: process.env.NUXT_API_BASE_AUTH || '',
     public: {
       apiBase:      process.env.NUXT_PUBLIC_API_BASE      || '/api/proxy',
-      backendBase:  process.env.NUXT_PUBLIC_BACKEND_BASE  || 'http://localhost:8000',
+      backendBase:  process.env.NUXT_API_BASE             || 'https://api.kimvannak.store',
       appName:      process.env.NUXT_PUBLIC_APP_NAME      || 'Clothing Store',
-      storeDomain:  process.env.NUXT_PUBLIC_STORE_DOMAIN  || 'https://store.example.com',
+      storeDomain:  process.env.NUXT_PUBLIC_STORE_DOMAIN  || 'https://web.kimvannak.store',
     },
   },
 
@@ -71,12 +76,18 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || (process.env.CF_PAGES ? 'cloudflare_pages' : 'cloudflare-module'),
+    compatibilityDate: '2024-11-01',
+    cloudflare: {
+      deployConfig: false,
+    },
   },
 
   routeRules: {
+    '/': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
+    '/products/**': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
     '/uploads/**': {
       // @ts-expect-error: 'proxy' is valid at runtime but not in the RouteRules type definition
-      proxy: `${process.env.NUXT_API_BASE || 'http://localhost:8000'}/uploads/**`,
+      proxy: `${process.env.NUXT_API_BASE || 'https://api.kimvannak.store'}/uploads/**`,
     },
   },
 })
