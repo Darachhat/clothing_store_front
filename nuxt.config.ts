@@ -55,14 +55,14 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    apiBase:     process.env.NUXT_API_BASE     || '',
+    apiBase:     process.env.NUXT_API_BASE     || 'https://api.kimvannak.store',
     // X-System-Authorization value injected server-side; never sent to browser
-    apiBaseAuth: process.env.NUXT_API_BASE_AUTH || '',
+    apiBaseAuth: process.env.NUXT_API_BASE_AUTH || 'Basic d2ViX2Zyb250OmM2MWNlMDdhLTc1YTMtNDFjNi1hYjBkLWFiZWM2NWU0Y2EyNA==',
     public: {
-      apiBase:      process.env.NUXT_PUBLIC_API_BASE      || '',
-      backendBase:  process.env.NUXT_PUBLIC_BACKEND_BASE  || process.env.NUXT_API_BASE || '',
-      appName:      process.env.NUXT_PUBLIC_APP_NAME      || '',
-      storeDomain:  process.env.NUXT_PUBLIC_STORE_DOMAIN  || '',
+      apiBase:      process.env.NUXT_PUBLIC_API_BASE      || '/api/proxy',
+      backendBase:  process.env.NUXT_PUBLIC_BACKEND_BASE  || process.env.NUXT_API_BASE || 'https://api.kimvannak.store',
+      appName:      process.env.NUXT_PUBLIC_APP_NAME      || 'Kim Vannak Store',
+      storeDomain:  process.env.NUXT_PUBLIC_STORE_DOMAIN  || 'https://kimvannak.store',
     },
   },
 

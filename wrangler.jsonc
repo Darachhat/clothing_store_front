@@ -9,6 +9,14 @@
   "assets": {
     "directory": "./.output/public",
     "binding": "ASSETS"
+  },
+  "vars": {
+    "NUXT_API_BASE": "https://api.kimvannak.store",
+    "NUXT_API_BASE_AUTH": "Basic d2ViX2Zyb250OmM2MWNlMDdhLTc1YTMtNDFjNi1hYjBkLWFiZWM2NWU0Y2EyNA==",
+    "NUXT_PUBLIC_API_BASE": "/api/proxy",
+    "NUXT_PUBLIC_BACKEND_BASE": "https://api.kimvannak.store",
+    "NUXT_PUBLIC_APP_NAME": "Kim Vannak Store",
+    "NUXT_PUBLIC_STORE_DOMAIN": "https://kimvannak.store"
   }
 }
 
