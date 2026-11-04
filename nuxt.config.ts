@@ -5,7 +5,20 @@ export default defineNuxtConfig({
 
   experimental: {
     appManifest: false,
-    emitRouteChunkError: 'automatic-immediate',
+    payloadExtraction: false,
+    defaults: {
+      nuxtLink: {
+        prefetch: false,
+      },
+    },
+  },
+
+  hooks: {
+    'build:manifest': (manifest) => {
+      for (const key in manifest) {
+        manifest[key].prefetch = false
+      }
+    },
   },
 
   future: {
