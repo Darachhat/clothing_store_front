@@ -96,8 +96,21 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
-    '/products/**': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
+    '/': {
+      headers: {
+        'cache-control': 'no-cache, no-store, must-revalidate',
+        'cdn-cache-control': 'no-store',
+        'cloudflare-cdn-cache-control': 'no-store',
+      },
+    },
+    '/products/**': {
+      headers: {
+        'cache-control': 'no-cache, no-store, must-revalidate',
+        'cdn-cache-control': 'no-store',
+        'cloudflare-cdn-cache-control': 'no-store',
+      },
+    },
+    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/uploads/**': {
       // @ts-expect-error: 'proxy' is valid at runtime but not in the RouteRules type definition
       proxy: `${process.env.NUXT_API_BASE || 'https://api.kimvannak.store'}/uploads/**`,
