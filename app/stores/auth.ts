@@ -79,6 +79,32 @@ export const useStoreAuthStore = defineStore('storeAuth', {
       this._persistSession(data.access_token, data.refresh_token, data.user)
     },
 
+    async createTelegramAppChallenge() {
+      const authApi = useStoreAuthApi()
+      return await authApi.telegramAppChallenge()
+    },
+
+    async createTelegramAppLinkChallenge() {
+      if (!this.accessToken) throw new Error('Not authenticated')
+      const authApi = useStoreAuthApi()
+      return await authApi.telegramAppLinkChallenge(this.accessToken)
+    },
+
+    async pollTelegramAppStatus(challengeToken: string) {
+      const authApi = useStoreAuthApi()
+      const res = await authApi.telegramAppStatus<{
+        status: string
+        message?: string
+        access_token?: string
+        refresh_token?: string
+        user?: Customer
+      }>(challengeToken)
+      if (res.status === 'APPROVED' && res.access_token && res.refresh_token && res.user) {
+        this._persistSession(res.access_token, res.refresh_token, res.user)
+      }
+      return res
+    },
+
     async linkTelegram(payload: Record<string, unknown>): Promise<Customer> {
       if (!this.accessToken) throw new Error('Not authenticated')
       const authApi = useStoreAuthApi()

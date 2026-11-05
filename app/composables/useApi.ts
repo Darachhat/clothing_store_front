@@ -48,10 +48,31 @@ export function useStoreAuthApi() {
       }),
     me: <T = any>(token: string) =>
       apiFetch<T>(STORE_API_ENDPOINTS.auth.me, { headers: { Authorization: `Bearer ${token}` } }),
-    telegramConfig: () =>
-      apiFetch<{ enabled: boolean; bot_username?: string | null }>(STORE_API_ENDPOINTS.auth.telegramConfig),
+    telegramConfig: <T = { enabled: boolean; bot_username?: string | null; bot_id?: string | null }>() =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramConfig),
     telegramLogin: <T = any>(payload: Record<string, unknown>) =>
       apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramLogin, { method: 'POST', body: payload }),
+    telegramAppChallenge: () =>
+      apiFetch<{
+        challenge_token: string
+        bot_username: string
+        tg_app_url: string
+        tg_web_url: string
+        expires_in_seconds: number
+      }>(STORE_API_ENDPOINTS.auth.telegramAppChallenge, { method: 'POST' }),
+    telegramAppLinkChallenge: (token: string) =>
+      apiFetch<{
+        challenge_token: string
+        bot_username: string
+        tg_app_url: string
+        tg_web_url: string
+        expires_in_seconds: number
+      }>(STORE_API_ENDPOINTS.auth.telegramAppLinkChallenge, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    telegramAppStatus: <T = any>(challengeToken: string) =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramAppStatus(challengeToken)),
     telegramLink: <T = any>(payload: Record<string, unknown>, token: string) =>
       apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramLink, {
         method: 'POST',

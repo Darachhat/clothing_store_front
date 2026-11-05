@@ -260,21 +260,38 @@ async function confirmOtp() {
 
 async function linkTelegram() {
   if (typeof window === 'undefined') return
-  const tgConfig = await authStore.getTelegramConfig()
-  const botId = tgConfig.bot_id || '8453886789'
-  const tgWindow = window as any
-  if (tgWindow.Telegram?.Login?.auth) {
-    tgWindow.Telegram.Login.auth(
-      { bot_id: botId, request_access: 'write' },
-      (data: Record<string, unknown> | false) => {
-        if (data) linkTelegramPayload(data)
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    const ch = await authStore.createTelegramAppLinkChallenge()
+    window.location.href = ch.tg_app_url
+    secMessage.value = "Tap 'Start' in @clothing_store_kvm_bot in your Telegram App to finish linking..."
+    let attempts = 0
+    const timer = setInterval(async () => {
+      attempts++
+      if (attempts > 60) {
+        clearInterval(timer)
+        secLoading.value = false
+        return
       }
-    )
-    return
+      try {
+        const res = await authStore.pollTelegramAppStatus(ch.challenge_token)
+        if (res.status === 'APPROVED') {
+          clearInterval(timer)
+          secLoading.value = false
+          await authStore.fetchCurrentCustomer()
+          secMessage.value = 'Telegram account linked!'
+        } else if (res.status === 'REJECTED' || res.status === 'EXPIRED') {
+          clearInterval(timer)
+          secLoading.value = false
+          secMessage.value = res.message || 'Telegram link failed.'
+        }
+      } catch {}
+    }, 2000)
+  } catch (err: any) {
+    secLoading.value = false
+    secMessage.value = err?.data?.detail || 'Could not start Telegram link.'
   }
-  const origin = window.location.origin
-  const returnTo = `${origin}${window.location.pathname}`
-  window.location.href = `https://oauth.telegram.org/auth?bot_id=${encodeURIComponent(botId)}&origin=${encodeURIComponent(origin)}&embed=0&request_access=write&return_to=${encodeURIComponent(returnTo)}`
 }
 
 async function unlinkTelegram() {
