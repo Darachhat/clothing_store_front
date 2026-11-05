@@ -29,7 +29,7 @@ export function useCatalogApi() {
   }
 }
 
-// Auth API — customer register / login / refresh / me
+// Auth API — customer register / login / refresh / logout / me / Telegram / phone
 export function useStoreAuthApi() {
   const { apiFetch } = useStoreApi()
 
@@ -40,8 +40,46 @@ export function useStoreAuthApi() {
       apiFetch(STORE_API_ENDPOINTS.auth.register, { method: 'POST', body }),
     refresh: <T = any>(refreshToken: string) =>
       apiFetch<T>(STORE_API_ENDPOINTS.auth.refresh, { method: 'POST', body: { refresh_token: refreshToken } }),
+    logout: (refreshToken: string, token?: string | null) =>
+      apiFetch(STORE_API_ENDPOINTS.auth.logout, {
+        method: 'POST',
+        body: { refresh_token: refreshToken },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }),
     me: <T = any>(token: string) =>
       apiFetch<T>(STORE_API_ENDPOINTS.auth.me, { headers: { Authorization: `Bearer ${token}` } }),
+    telegramConfig: () =>
+      apiFetch<{ enabled: boolean; bot_username?: string | null }>(STORE_API_ENDPOINTS.auth.telegramConfig),
+    telegramLogin: <T = any>(payload: Record<string, unknown>) =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramLogin, { method: 'POST', body: payload }),
+    telegramLink: <T = any>(payload: Record<string, unknown>, token: string) =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramLink, {
+        method: 'POST',
+        body: payload,
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    telegramUnlink: <T = any>(token: string) =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.telegramLink, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    requestPhoneVerification: (phoneNumber: string, token: string) =>
+      apiFetch<{
+        message: string
+        normalized_phone: string
+        expires_in_seconds: number
+        delivery_channel: string
+      }>(STORE_API_ENDPOINTS.auth.phoneRequestVerification, {
+        method: 'POST',
+        body: { phone_number: phoneNumber },
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    verifyPhone: <T = any>(phoneNumber: string, otpCode: string, token: string) =>
+      apiFetch<T>(STORE_API_ENDPOINTS.auth.phoneVerify, {
+        method: 'POST',
+        body: { phone_number: phoneNumber, otp_code: otpCode },
+        headers: { Authorization: `Bearer ${token}` },
+      }),
   }
 }
 

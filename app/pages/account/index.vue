@@ -3,7 +3,7 @@
     <div class="account-header">
       <div>
         <h1 class="account-title">My Account</h1>
-        <p class="account-sub">Manage your profile and view your order history.</p>
+        <p class="account-sub">Manage your profile, verified phone number, Telegram identity, and order history.</p>
       </div>
       <button type="button" class="btn-logout" @click="handleLogout">
         <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4" />
@@ -18,11 +18,88 @@
       </div>
       <div class="profile-item">
         <span class="profile-label">Username</span>
-        <span class="profile-val">{{ authStore.currentCustomer.username }}</span>
+        <span class="profile-val">@{{ authStore.currentCustomer.username }}</span>
       </div>
       <div class="profile-item">
         <span class="profile-label">Email</span>
         <span class="profile-val">{{ authStore.currentCustomer.email }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Verified Phone</span>
+        <span class="profile-val">
+          {{ authStore.currentCustomer.phone_number || 'Not linked' }}
+          <span v-if="authStore.currentCustomer.phone_verified" class="verified-pill">Verified</span>
+        </span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Telegram Identity</span>
+        <span class="profile-val">
+          {{
+            authStore.currentCustomer.telegram_id
+              ? authStore.currentCustomer.telegram_username
+                ? `@${authStore.currentCustomer.telegram_username}`
+                : `ID: ${authStore.currentCustomer.telegram_id}`
+              : 'Not linked'
+          }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Phone & Telegram Linking Card -->
+    <div v-if="authStore.currentCustomer" class="security-grid">
+      <div class="security-box">
+        <div class="security-box__header">
+          <UIcon name="i-heroicons-phone" class="w-4 h-4" />
+          <span>Link Verified Phone Number</span>
+        </div>
+        <div class="security-box__row">
+          <input
+            v-model="phoneForm.phone_number"
+            type="text"
+            placeholder="+85569382165 or 069382165"
+            class="sec-input"
+          />
+          <button type="button" class="sec-btn" :disabled="secLoading" @click="requestOtp">
+            Send OTP
+          </button>
+        </div>
+        <div v-if="phoneForm.challengeSent" class="security-box__row">
+          <input
+            v-model="phoneForm.otp_code"
+            type="text"
+            maxlength="6"
+            placeholder="6-digit OTP"
+            class="sec-input"
+          />
+          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading" @click="confirmOtp">
+            Verify
+          </button>
+        </div>
+        <p v-if="secMessage" class="sec-msg">{{ secMessage }}</p>
+      </div>
+
+      <div class="security-box">
+        <div class="security-box__header">
+          <UIcon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+          <span>Telegram Account Linking</span>
+        </div>
+        <div v-if="authStore.currentCustomer.telegram_id" class="security-box__row">
+          <span class="sec-msg">Linked to Telegram ID {{ authStore.currentCustomer.telegram_id }}</span>
+          <button type="button" class="sec-btn" :disabled="secLoading" @click="unlinkTelegram">
+            Unlink
+          </button>
+        </div>
+        <div v-else class="security-box__col">
+          <textarea
+            v-model="telegramPayloadJson"
+            rows="2"
+            placeholder='Paste signed Telegram Login payload JSON...'
+            class="sec-textarea"
+          />
+          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading || !telegramPayloadJson.trim()" @click="linkTelegram">
+            Link Telegram
+          </button>
+        </div>
       </div>
     </div>
 
@@ -52,7 +129,7 @@
           </div>
           <div class="order-items">
             <div v-for="item in order.items" :key="item.id" class="order-item-row">
-              <span>{{ item.product_name }} <span v-if="item.color || item.size" class="order-item-meta">({{ [item.color, item.size].filter(Boolean).join(' / ') }})</span> × {{ item.quantity }}</span>
+              <span>{{ item.product_name }} <span v-if="item.color || item.size" class="order-item-meta">({{ [item.color, item.size].filter(Boolean).join(' / ') }})</span> &times; {{ item.quantity }}</span>
               <span>${{ Number(item.subtotal || 0).toFixed(2) }}</span>
             </div>
           </div>
@@ -71,6 +148,14 @@ const { listMyOrders } = useStoreOrdersApi()
 
 const orders = ref<any[]>([])
 const loading = ref(true)
+const secLoading = ref(false)
+const secMessage = ref('')
+const telegramPayloadJson = ref('')
+const phoneForm = reactive({
+  phone_number: '',
+  otp_code: '',
+  challengeSent: false,
+})
 
 onMounted(async () => {
   authStore.restoreSession()
@@ -79,6 +164,11 @@ onMounted(async () => {
     return
   }
   await authStore.fetchCurrentCustomer()
+  if (!authStore.accessToken || !authStore.currentCustomer) {
+    await router.replace('/account/login')
+    return
+  }
+  phoneForm.phone_number = authStore.currentCustomer.phone_number || ''
   try {
     orders.value = await listMyOrders()
   } catch {
@@ -89,8 +179,67 @@ onMounted(async () => {
 })
 
 async function handleLogout() {
-  authStore.logout()
+  await authStore.logout()
   await router.push('/account/login')
+}
+
+async function requestOtp() {
+  if (!phoneForm.phone_number.trim()) return
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    const res = await authStore.requestPhoneVerification(phoneForm.phone_number.trim())
+    phoneForm.phone_number = res.normalized_phone
+    phoneForm.challengeSent = true
+    secMessage.value = res.message
+  } catch (err: any) {
+    secMessage.value = err?.data?.detail || 'Failed to request verification code.'
+  } finally {
+    secLoading.value = false
+  }
+}
+
+async function confirmOtp() {
+  if (!phoneForm.phone_number.trim() || !phoneForm.otp_code.trim()) return
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    await authStore.verifyPhone(phoneForm.phone_number.trim(), phoneForm.otp_code.trim())
+    phoneForm.challengeSent = false
+    phoneForm.otp_code = ''
+    secMessage.value = 'Phone number verified and linked.'
+  } catch (err: any) {
+    secMessage.value = err?.data?.detail || 'Invalid verification code.'
+  } finally {
+    secLoading.value = false
+  }
+}
+
+async function linkTelegram() {
+  if (!telegramPayloadJson.value.trim()) return
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    const parsed = JSON.parse(telegramPayloadJson.value)
+    await authStore.linkTelegram(parsed)
+    telegramPayloadJson.value = ''
+  } catch (err: any) {
+    secMessage.value = err?.data?.detail || 'Telegram linking failed.'
+  } finally {
+    secLoading.value = false
+  }
+}
+
+async function unlinkTelegram() {
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    await authStore.unlinkTelegram()
+  } catch (err: any) {
+    secMessage.value = err?.data?.detail || 'Failed to unlink Telegram.'
+  } finally {
+    secLoading.value = false
+  }
 }
 
 function formatDate(iso?: string) {
@@ -122,7 +271,23 @@ function formatDate(iso?: string) {
 }
 .profile-item { display: flex; flex-direction: column; gap: 4px; }
 .profile-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
-.profile-val { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.profile-val { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+.verified-pill { font-size: 11px; font-weight: 600; padding: 1px 6px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: 999px; color: var(--text-secondary); }
+
+.security-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-3); }
+.security-box {
+  padding: var(--space-3); background: var(--surface-card);
+  border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-lg);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.security-box__header { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.security-box__row { display: flex; align-items: center; gap: 8px; }
+.security-box__col { display: flex; flex-direction: column; gap: 8px; }
+.sec-input { flex: 1; height: 36px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 0 10px; font-size: 13px; font-family: monospace; }
+.sec-textarea { width: 100%; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 8px; font-size: 11px; font-family: monospace; }
+.sec-btn { height: 36px; padding: 0 12px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); background: var(--surface-card); font-size: 12px; font-weight: 600; cursor: pointer; }
+.sec-btn--primary { background: var(--text-primary); color: white; border: none; }
+.sec-msg { font-size: 12px; color: var(--text-secondary); }
 
 .orders-section { display: flex; flex-direction: column; gap: var(--space-2); }
 .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
@@ -158,4 +323,3 @@ function formatDate(iso?: string) {
 .order-item-row { display: flex; justify-content: space-between; }
 .order-item-meta { color: var(--text-tertiary); font-size: 12px; }
 </style>
-
