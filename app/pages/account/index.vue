@@ -90,14 +90,8 @@
           </button>
         </div>
         <div v-else class="security-box__col">
-          <textarea
-            v-model="telegramPayloadJson"
-            rows="2"
-            placeholder='Paste signed Telegram Login payload JSON...'
-            class="sec-textarea"
-          />
-          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading || !telegramPayloadJson.trim()" @click="linkTelegram">
-            Link Telegram
+          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading" @click="linkTelegram">
+            Connect with Telegram
           </button>
         </div>
       </div>
@@ -169,6 +163,10 @@ onMounted(async () => {
     return
   }
   phoneForm.phone_number = authStore.currentCustomer.phone_number || ''
+  const redirectedPayload = extractTelegramRedirectOnAccount()
+  if (redirectedPayload) {
+    await linkTelegramPayload(redirectedPayload)
+  }
   try {
     orders.value = await listMyOrders()
   } catch {
@@ -177,6 +175,51 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function extractTelegramRedirectOnAccount(): Record<string, unknown> | null {
+  if (typeof window === 'undefined') return null
+  const hash = window.location.hash || ''
+  if (hash.includes('tgAuthResult=')) {
+    try {
+      const encoded = hash.split('tgAuthResult=')[1]?.split('&')[0] || ''
+      const normalizedBase64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
+      const padded = normalizedBase64 + '='.repeat((4 - (normalizedBase64.length % 4)) % 4)
+      const parsed = JSON.parse(atob(padded))
+      if (parsed && parsed.id && parsed.hash) {
+        window.history.replaceState({}, document.title, window.location.pathname)
+        return parsed
+      }
+    } catch {}
+  }
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('id') && params.get('hash') && params.get('auth_date')) {
+    const payload: Record<string, unknown> = {
+      id: Number(params.get('id')) || params.get('id'),
+      auth_date: Number(params.get('auth_date')),
+      hash: params.get('hash'),
+    }
+    if (params.get('first_name')) payload.first_name = params.get('first_name')
+    if (params.get('last_name')) payload.last_name = params.get('last_name')
+    if (params.get('username')) payload.username = params.get('username')
+    if (params.get('photo_url')) payload.photo_url = params.get('photo_url')
+    window.history.replaceState({}, document.title, window.location.pathname)
+    return payload
+  }
+  return null
+}
+
+async function linkTelegramPayload(payload: Record<string, unknown>) {
+  secLoading.value = true
+  secMessage.value = ''
+  try {
+    await authStore.linkTelegram(payload)
+    secMessage.value = 'Telegram account linked.'
+  } catch (err: any) {
+    secMessage.value = err?.data?.detail || 'Telegram linking failed.'
+  } finally {
+    secLoading.value = false
+  }
+}
 
 async function handleLogout() {
   await authStore.logout()
@@ -216,18 +259,22 @@ async function confirmOtp() {
 }
 
 async function linkTelegram() {
-  if (!telegramPayloadJson.value.trim()) return
-  secLoading.value = true
-  secMessage.value = ''
-  try {
-    const parsed = JSON.parse(telegramPayloadJson.value)
-    await authStore.linkTelegram(parsed)
-    telegramPayloadJson.value = ''
-  } catch (err: any) {
-    secMessage.value = err?.data?.detail || 'Telegram linking failed.'
-  } finally {
-    secLoading.value = false
+  if (typeof window === 'undefined') return
+  const tgConfig = await authStore.getTelegramConfig()
+  const botId = tgConfig.bot_id || '8453886789'
+  const tgWindow = window as any
+  if (tgWindow.Telegram?.Login?.auth) {
+    tgWindow.Telegram.Login.auth(
+      { bot_id: botId, request_access: 'write' },
+      (data: Record<string, unknown> | false) => {
+        if (data) linkTelegramPayload(data)
+      }
+    )
+    return
   }
+  const origin = window.location.origin
+  const returnTo = `${origin}${window.location.pathname}`
+  window.location.href = `https://oauth.telegram.org/auth?bot_id=${encodeURIComponent(botId)}&origin=${encodeURIComponent(origin)}&embed=0&request_access=write&return_to=${encodeURIComponent(returnTo)}`
 }
 
 async function unlinkTelegram() {

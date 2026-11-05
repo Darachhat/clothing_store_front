@@ -55,12 +55,17 @@ export const useStoreAuthStore = defineStore('storeAuth', {
       this._persistSession(data.access_token, data.refresh_token, data.user)
     },
 
-    async getTelegramConfig(): Promise<{ enabled: boolean; bot_username?: string | null }> {
+    async getTelegramConfig(): Promise<{ enabled: boolean; bot_username?: string | null; bot_id?: string | null }> {
       const authApi = useStoreAuthApi()
       try {
-        return await authApi.telegramConfig()
+        const res = await authApi.telegramConfig<{ enabled: boolean; bot_username?: string | null; bot_id?: string | null }>()
+        return {
+          enabled: res.enabled,
+          bot_username: res.bot_username ? res.bot_username.replace(/^@/, '') : 'clothing_store_kvm_bot',
+          bot_id: res.bot_id || '8453886789',
+        }
       } catch {
-        return { enabled: false, bot_username: null }
+        return { enabled: true, bot_username: 'clothing_store_kvm_bot', bot_id: '8453886789' }
       }
     },
 
