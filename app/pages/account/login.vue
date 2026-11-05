@@ -34,9 +34,9 @@
 
         <div class="tg-section">
           <div ref="telegramWidgetContainer" class="tg-widget-box" />
-          <button type="button" class="btn-secondary" :disabled="loading" @click="startTelegramRedirectLogin">
+          <button v-if="!widgetLoaded" type="button" class="btn-secondary" :disabled="loading" @click="startTelegramRedirectLogin">
             <UIcon name="i-heroicons-paper-airplane" class="w-4 h-4" />
-            <span>{{ loading ? 'Verifying Telegram...' : 'Continue with Telegram' }}</span>
+            <span>{{ loading ? 'Verifying Telegram...' : 'Log in with Telegram' }}</span>
           </button>
         </div>
       </div>
@@ -90,6 +90,7 @@ const errorMsg = ref('')
 const successMsg = ref('')
 const telegramBotId = ref<string>('8453886789')
 const telegramWidgetContainer = ref<HTMLElement | null>(null)
+const widgetLoaded = ref(false)
 
 const loginForm = reactive({ username: '', password: '' })
 const regForm = reactive({ full_name: '', email: '', username: '', password: '' })
@@ -206,8 +207,14 @@ onMounted(async () => {
     script.setAttribute('data-telegram-login', cleanBotUsername)
     script.setAttribute('data-size', 'large')
     script.setAttribute('data-onauth', 'onTelegramAuthStore(user)')
-    script.setAttribute('data-auth-url', `${window.location.origin}${window.location.pathname}`)
     script.setAttribute('data-request-access', 'write')
+    script.onload = () => {
+      setTimeout(() => {
+        if (telegramWidgetContainer.value?.querySelector('iframe')) {
+          widgetLoaded.value = true
+        }
+      }, 300)
+    }
     telegramWidgetContainer.value.appendChild(script)
   }
 })
