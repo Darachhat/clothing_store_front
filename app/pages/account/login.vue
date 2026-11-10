@@ -1,58 +1,73 @@
 <template>
-  <div class="auth-root">
-    <div class="auth-card">
+  <div class="flex items-center justify-center min-h-[60vh] p-4">
+    <div class="w-full max-w-sm bg-surface-card border border-border-subtle rounded-2xl p-6 shadow-card">
       <!-- Tabs -->
-      <div class="auth-tabs">
-        <button :class="['auth-tab', mode === 'login' && 'auth-tab--active']" @click="mode = 'login'">Sign In</button>
-        <button :class="['auth-tab', mode === 'register' && 'auth-tab--active']" @click="mode = 'register'">Create Account</button>
+      <div class="flex gap-1 mb-6 bg-surface-bg rounded-lg p-1">
+        <button
+          type="button"
+          :class="['flex-1 h-8 border-none rounded-md text-xs font-body text-ink-secondary cursor-pointer font-medium transition-all', mode === 'login' && '!bg-surface-card !text-ink font-semibold shadow-xs']"
+          @click="mode = 'login'"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          :class="['flex-1 h-8 border-none rounded-md text-xs font-body text-ink-secondary cursor-pointer font-medium transition-all', mode === 'register' && '!bg-surface-card !text-ink font-semibold shadow-xs']"
+          @click="mode = 'register'"
+        >
+          Create Account
+        </button>
       </div>
 
       <!-- Login Form -->
       <div v-if="mode === 'login'">
-        <form class="auth-form" @submit.prevent="handleLogin">
-          <h1 class="auth-title">Welcome back</h1>
-          <p class="auth-sub">Sign in with your username, verified phone, or Telegram.</p>
+        <form class="flex flex-col gap-4" @submit.prevent="handleLogin">
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-ink">Welcome back</h1>
+            <p class="text-xs text-ink-secondary mt-1">Sign in with your username, verified phone, or Telegram.</p>
+          </div>
 
-          <div class="field">
-            <label class="field-label" for="login-username">Username or Verified Phone</label>
-            <input id="login-username" v-model="loginForm.username" type="text" class="field-input" placeholder="your_username or +855..." required />
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-ink" for="login-username">Username or Verified Phone</label>
+            <input id="login-username" v-model="loginForm.username" type="text" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="your_username or +855..." required />
           </div>
-          <div class="field">
-            <label class="field-label" for="login-password">Password</label>
-            <input id="login-password" v-model="loginForm.password" type="password" class="field-input" placeholder="••••••••" required />
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-ink" for="login-password">Password</label>
+            <input id="login-password" v-model="loginForm.password" type="password" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="••••••••" required />
           </div>
-          <div v-if="errorMsg" class="field-error">
-            <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4" /> {{ errorMsg }}
+          <div v-if="errorMsg" class="flex items-center gap-2 p-3 bg-status-red-bg rounded-md text-xs text-status-red border border-border-subtle">
+            <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4 shrink-0" /> {{ errorMsg }}
           </div>
-          <button type="submit" class="btn-primary" :disabled="loading">
-            <UIcon v-if="loading" name="i-heroicons-arrow-path" class="w-4 h-4 spin" />
+          <button type="submit" class="h-10 w-full bg-ink text-white rounded-md text-xs font-semibold font-body cursor-pointer flex items-center justify-center gap-2 mt-1 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs" :disabled="loading">
+            <UIcon v-if="loading" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
             {{ loading ? 'Signing in...' : 'Sign In' }}
           </button>
         </form>
 
-        <div class="auth-divider"><span>or</span></div>
+        <div class="flex items-center gap-3 my-4 text-[11px] text-ink-tertiary uppercase before:content-[''] before:flex-1 before:h-px before:bg-border-subtle after:content-[''] after:flex-1 after:h-px after:bg-border-subtle">
+          <span>or</span>
+        </div>
 
-        <div class="tg-section">
-          <button type="button" class="btn-secondary" :disabled="loading || appChallengeActive" @click="startTelegramAppLogin">
+        <div class="flex flex-col gap-2">
+          <button type="button" class="h-9 w-full bg-surface-card text-ink border border-border-subtle rounded-md text-xs font-semibold cursor-pointer flex items-center justify-center gap-2 hover:bg-surface-hover transition-colors" :disabled="loading || appChallengeActive" @click="startTelegramAppLogin">
             <UIcon name="i-heroicons-paper-airplane" class="w-4 h-4" />
             <span>{{ appChallengeActive ? 'Waiting for Telegram App...' : 'Log in with Telegram App' }}</span>
           </button>
-          <div v-if="appChallengeActive" class="tg-payload-box">
-            <div style="font-size: 12px; color: var(--text-secondary);">
+          <div v-if="appChallengeActive" class="flex flex-col gap-2 p-3 border border-border-subtle rounded-md bg-surface-bg">
+            <div class="text-xs text-ink-secondary">
               {{ appChallengeMessage || "Tap 'Start' in @clothing_store_kvm_bot in your Telegram App..." }}
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div class="flex gap-2">
               <a
                 v-if="appChallengeWebUrl"
                 :href="appChallengeWebUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="btn-secondary"
-                style="text-decoration: none; height: 34px; font-size: 12px;"
+                class="flex-1 h-8.5 bg-surface-card text-ink border border-border-subtle rounded-md text-xs font-semibold inline-flex items-center justify-center gap-1.5 no-underline hover:bg-surface-hover transition-colors"
               >
                 Open in Telegram
               </a>
-              <button type="button" class="btn-secondary" style="height: 34px; font-size: 12px;" @click="cancelTelegramAppLogin">
+              <button type="button" class="h-8.5 px-3 bg-surface-card text-ink border border-border-subtle rounded-md text-xs font-semibold cursor-pointer hover:bg-surface-hover transition-colors" @click="cancelTelegramAppLogin">
                 Cancel
               </button>
             </div>
@@ -61,34 +76,36 @@
       </div>
 
       <!-- Register Form -->
-      <form v-else class="auth-form" @submit.prevent="handleRegister">
-        <h1 class="auth-title">Create Account</h1>
-        <p class="auth-sub">Join us to track your orders and get personalized deals.</p>
+      <form v-else class="flex flex-col gap-4" @submit.prevent="handleRegister">
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-ink">Create Account</h1>
+          <p class="text-xs text-ink-secondary mt-1">Join us to track your orders and get personalized deals.</p>
+        </div>
 
-        <div class="field">
-          <label class="field-label" for="reg-name">Full Name</label>
-          <input id="reg-name" v-model="regForm.full_name" type="text" class="field-input" placeholder="John Smith" required />
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-ink" for="reg-name">Full Name</label>
+          <input id="reg-name" v-model="regForm.full_name" type="text" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="John Smith" required />
         </div>
-        <div class="field">
-          <label class="field-label" for="reg-email">Email</label>
-          <input id="reg-email" v-model="regForm.email" type="email" class="field-input" placeholder="you@example.com" required />
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-ink" for="reg-email">Email</label>
+          <input id="reg-email" v-model="regForm.email" type="email" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="you@example.com" required />
         </div>
-        <div class="field">
-          <label class="field-label" for="reg-username">Username</label>
-          <input id="reg-username" v-model="regForm.username" type="text" class="field-input" placeholder="your_username" required />
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-ink" for="reg-username">Username</label>
+          <input id="reg-username" v-model="regForm.username" type="text" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="your_username" required />
         </div>
-        <div class="field">
-          <label class="field-label" for="reg-password">Password</label>
-          <input id="reg-password" v-model="regForm.password" type="password" class="field-input" placeholder="Min. 8 characters" required minlength="8" />
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-ink" for="reg-password">Password</label>
+          <input id="reg-password" v-model="regForm.password" type="password" class="h-10 border border-border-subtle rounded-md px-3 text-sm font-body text-ink bg-surface-card focus:outline-hidden focus:border-border-strong transition-colors" placeholder="Min. 8 characters" required minlength="8" />
         </div>
-        <div v-if="errorMsg" class="field-error">
-          <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4" /> {{ errorMsg }}
+        <div v-if="errorMsg" class="flex items-center gap-2 p-3 bg-status-red-bg rounded-md text-xs text-status-red border border-border-subtle">
+          <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4 shrink-0" /> {{ errorMsg }}
         </div>
-        <div v-if="successMsg" class="field-success">
-          <UIcon name="i-heroicons-check-circle" class="w-4 h-4" /> {{ successMsg }}
+        <div v-if="successMsg" class="flex items-center gap-2 p-3 bg-status-green-bg rounded-md text-xs text-status-green border border-border-subtle">
+          <UIcon name="i-heroicons-check-circle" class="w-4 h-4 shrink-0" /> {{ successMsg }}
         </div>
-        <button type="submit" class="btn-primary" :disabled="loading">
-          <UIcon v-if="loading" name="i-heroicons-arrow-path" class="w-4 h-4 spin" />
+        <button type="submit" class="h-10 w-full bg-ink text-white rounded-md text-xs font-semibold font-body cursor-pointer flex items-center justify-center gap-2 mt-1 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs" :disabled="loading">
+          <UIcon v-if="loading" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
           {{ loading ? 'Creating account...' : 'Create Account' }}
         </button>
       </form>
@@ -250,32 +267,3 @@ onMounted(async () => {
   if (tgConfig.bot_id) telegramBotId.value = tgConfig.bot_id
 })
 </script>
-
-<style scoped>
-.auth-root { display: flex; align-items: center; justify-content: center; min-height: 60vh; padding: var(--space-4); }
-.auth-card { width: 100%; max-width: 400px; background: var(--surface-card); border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-lg); padding: var(--space-4); }
-.auth-tabs { display: flex; gap: 4px; margin-bottom: var(--space-3); background: var(--surface-bg); border-radius: var(--radius-md); padding: 4px; }
-.auth-tab { flex: 1; height: 32px; border: none; background: none; border-radius: 6px; font-size: 13px; font-family: var(--font-body); color: var(--text-secondary); cursor: pointer; font-weight: 500; }
-.auth-tab--active { background: var(--surface-card); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-.auth-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.auth-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; margin-bottom: var(--space-3); }
-.auth-form { display: flex; flex-direction: column; gap: var(--space-2); }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field-label { font-size: 12px; font-weight: 600; color: var(--text-primary); max-width: none; }
-.field-input { height: 40px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 0 12px; font-size: 14px; font-family: var(--font-body); color: var(--text-primary); background: var(--surface-card); outline: none; }
-.field-input:focus { border-color: var(--border-subtle, #e2e8f0); }
-.field-error { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--status-red-bg); border-radius: var(--radius-md); font-size: 13px; color: var(--status-red); }
-.field-success { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--status-green-bg); border-radius: var(--radius-md); font-size: 13px; color: var(--status-green); }
-.btn-primary { height: 40px; width: 100%; background: var(--accent); color: var(--accent-fg); border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
-.btn-primary:hover:not(:disabled) { opacity: 0.88; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-secondary { height: 38px; width: 100%; background: var(--surface-card); color: var(--text-primary); border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.auth-divider { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; }
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle, #e5e7eb); }
-.tg-section { display: flex; flex-direction: column; gap: 8px; }
-.tg-widget-box { display: flex; justify-content: center; }
-.tg-payload-box { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); }
-.tg-textarea { width: 100%; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 8px; font-family: monospace; font-size: 11px; resize: vertical; }
-.spin { animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>

@@ -466,7 +466,7 @@ async function initializeKhqrSession() {
   try {
     // Create or reuse a DRAFT order for KHQR generation
     if (!activeDraftOrderId.value) {
-      const draftOrder = await createOrder({
+      const draftOrder: any = await createOrder({
         items: cartStore.items.map((i) => ({
           variant_id: i.variantId,
           quantity: i.quantity,

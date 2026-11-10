@@ -1,39 +1,39 @@
 <template>
-  <div class="account-page">
-    <div class="account-header">
+  <div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
       <div>
-        <h1 class="account-title">My Account</h1>
-        <p class="account-sub">Manage your profile, verified phone number, Telegram identity, and order history.</p>
+        <h1 class="text-2xl font-bold text-ink tracking-tight">My Account</h1>
+        <p class="text-xs text-ink-secondary mt-0.5">Manage your profile, verified phone number, Telegram identity, and order history.</p>
       </div>
-      <button type="button" class="btn-logout" @click="handleLogout">
+      <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-border-subtle rounded-md bg-surface-card text-xs font-semibold text-ink cursor-pointer hover:bg-surface-hover transition-colors shadow-xs" @click="handleLogout">
         <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4" />
         <span>Sign Out</span>
       </button>
     </div>
 
-    <div v-if="authStore.currentCustomer" class="profile-card">
-      <div class="profile-item">
-        <span class="profile-label">Full Name</span>
-        <span class="profile-val">{{ authStore.currentCustomer.full_name }}</span>
+    <div v-if="authStore.currentCustomer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-surface-card border border-border-subtle rounded-2xl shadow-card">
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] uppercase tracking-wider text-ink-tertiary font-medium">Full Name</span>
+        <span class="text-sm font-semibold text-ink">{{ authStore.currentCustomer.full_name }}</span>
       </div>
-      <div class="profile-item">
-        <span class="profile-label">Username</span>
-        <span class="profile-val">@{{ authStore.currentCustomer.username }}</span>
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] uppercase tracking-wider text-ink-tertiary font-medium">Username</span>
+        <span class="text-sm font-semibold text-ink">@{{ authStore.currentCustomer.username }}</span>
       </div>
-      <div class="profile-item">
-        <span class="profile-label">Email</span>
-        <span class="profile-val">{{ authStore.currentCustomer.email }}</span>
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] uppercase tracking-wider text-ink-tertiary font-medium">Email</span>
+        <span class="text-sm font-semibold text-ink truncate">{{ authStore.currentCustomer.email }}</span>
       </div>
-      <div class="profile-item">
-        <span class="profile-label">Verified Phone</span>
-        <span class="profile-val">
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] uppercase tracking-wider text-ink-tertiary font-medium">Verified Phone</span>
+        <span class="text-sm font-semibold text-ink flex items-center gap-2">
           {{ authStore.currentCustomer.phone_number || 'Not linked' }}
-          <span v-if="authStore.currentCustomer.phone_verified" class="verified-pill">Verified</span>
+          <span v-if="authStore.currentCustomer.phone_verified" class="text-[11px] font-semibold px-2 py-0.5 border border-border-subtle rounded-full text-ink-secondary bg-surface-bg">Verified</span>
         </span>
       </div>
-      <div class="profile-item">
-        <span class="profile-label">Telegram Identity</span>
-        <span class="profile-val">
+      <div class="flex flex-col gap-1 sm:col-span-2 md:col-span-4">
+        <span class="text-[11px] uppercase tracking-wider text-ink-tertiary font-medium">Telegram Identity</span>
+        <span class="text-sm font-semibold text-ink">
           {{
             authStore.currentCustomer.telegram_id
               ? authStore.currentCustomer.telegram_username
@@ -46,85 +46,85 @@
     </div>
 
     <!-- Phone & Telegram Linking Card -->
-    <div v-if="authStore.currentCustomer" class="security-grid">
-      <div class="security-box">
-        <div class="security-box__header">
+    <div v-if="authStore.currentCustomer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-4 bg-surface-card border border-border-subtle rounded-2xl shadow-card flex flex-col gap-3">
+        <div class="flex items-center gap-2 text-xs font-bold text-ink">
           <UIcon name="i-heroicons-phone" class="w-4 h-4" />
           <span>Link Verified Phone Number</span>
         </div>
-        <div class="security-box__row">
+        <div class="flex items-center gap-2">
           <input
             v-model="phoneForm.phone_number"
             type="text"
             placeholder="+85569382165 or 069382165"
-            class="sec-input"
+            class="flex-1 h-9 border border-border-subtle rounded-md px-3 text-xs font-mono bg-surface-card focus:outline-hidden focus:border-border-strong text-ink"
           />
-          <button type="button" class="sec-btn" :disabled="secLoading" @click="requestOtp">
+          <button type="button" class="h-9 px-3.5 border border-border-subtle rounded-md bg-surface-card text-xs font-semibold text-ink cursor-pointer hover:bg-surface-hover disabled:opacity-50 transition-colors" :disabled="secLoading" @click="requestOtp">
             Send OTP
           </button>
         </div>
-        <div v-if="phoneForm.challengeSent" class="security-box__row">
+        <div v-if="phoneForm.challengeSent" class="flex items-center gap-2">
           <input
             v-model="phoneForm.otp_code"
             type="text"
             maxlength="6"
             placeholder="6-digit OTP"
-            class="sec-input"
+            class="flex-1 h-9 border border-border-subtle rounded-md px-3 text-xs font-mono bg-surface-card focus:outline-hidden focus:border-border-strong text-ink"
           />
-          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading" @click="confirmOtp">
+          <button type="button" class="h-9 px-3.5 border border-border-subtle rounded-md bg-ink text-white text-xs font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 transition-all shadow-xs" :disabled="secLoading" @click="confirmOtp">
             Verify
           </button>
         </div>
-        <p v-if="secMessage" class="sec-msg">{{ secMessage }}</p>
+        <p v-if="secMessage" class="text-xs text-ink-secondary">{{ secMessage }}</p>
       </div>
 
-      <div class="security-box">
-        <div class="security-box__header">
+      <div class="p-4 bg-surface-card border border-border-subtle rounded-2xl shadow-card flex flex-col gap-3">
+        <div class="flex items-center gap-2 text-xs font-bold text-ink">
           <UIcon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           <span>Telegram Account Linking</span>
         </div>
-        <div v-if="authStore.currentCustomer.telegram_id" class="security-box__row">
-          <span class="sec-msg">Linked to Telegram ID {{ authStore.currentCustomer.telegram_id }}</span>
-          <button type="button" class="sec-btn" :disabled="secLoading" @click="unlinkTelegram">
+        <div v-if="authStore.currentCustomer.telegram_id" class="flex items-center justify-between gap-2">
+          <span class="text-xs text-ink-secondary">Linked to Telegram ID {{ authStore.currentCustomer.telegram_id }}</span>
+          <button type="button" class="h-9 px-3.5 border border-border-subtle rounded-md bg-surface-card text-xs font-semibold text-ink cursor-pointer hover:bg-surface-hover disabled:opacity-50 transition-colors" :disabled="secLoading" @click="unlinkTelegram">
             Unlink
           </button>
         </div>
-        <div v-else class="security-box__col">
-          <button type="button" class="sec-btn sec-btn--primary" :disabled="secLoading" @click="linkTelegram">
+        <div v-else class="flex flex-col gap-2">
+          <button type="button" class="h-9 px-3.5 border border-border-subtle rounded-md bg-ink text-white text-xs font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 transition-all shadow-xs" :disabled="secLoading" @click="linkTelegram">
             Connect with Telegram
           </button>
         </div>
       </div>
     </div>
 
-    <div class="orders-section">
-      <h2 class="section-title">Order History</h2>
+    <div class="flex flex-col gap-3 mt-2">
+      <h2 class="text-base font-bold text-ink">Order History</h2>
 
-      <div v-if="loading" class="empty-state">
+      <div v-if="loading" class="flex flex-col items-center justify-center gap-2 py-12 px-4 bg-surface-card border border-border-subtle rounded-2xl text-ink-secondary text-xs shadow-card">
         <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
         <span>Loading orders...</span>
       </div>
-      <div v-else-if="orders.length === 0" class="empty-state">
-        <UIcon name="i-heroicons-shopping-bag" class="w-8 h-8" />
+      <div v-else-if="orders.length === 0" class="flex flex-col items-center justify-center gap-2 py-12 px-4 bg-surface-card border border-border-subtle rounded-2xl text-ink-secondary text-xs shadow-card">
+        <UIcon name="i-heroicons-shopping-bag" class="w-8 h-8 text-ink-tertiary" />
         <p>You have not placed any orders yet.</p>
-        <NuxtLink to="/products" class="btn-shop">Start Shopping</NuxtLink>
+        <NuxtLink to="/products" class="mt-2 px-4 py-2 rounded-md bg-ink text-white text-xs font-semibold no-underline hover:opacity-90 transition-opacity shadow-xs">Start Shopping</NuxtLink>
       </div>
-      <div v-else class="orders-list">
-        <div v-for="order in orders" :key="order.id" class="order-card">
-          <div class="order-card__top">
+      <div v-else class="flex flex-col gap-3">
+        <div v-for="order in orders" :key="order.id" class="p-4 bg-surface-card border border-border-subtle rounded-2xl shadow-card flex flex-col gap-2.5">
+          <div class="flex items-center justify-between pb-2.5 border-b border-border-subtle">
             <div>
-              <span class="order-inv">{{ order.invoice_number }}</span>
-              <span class="order-date">{{ formatDate(order.created_at) }}</span>
+              <span class="text-sm font-bold text-ink mr-2.5 font-mono">{{ order.invoice_number }}</span>
+              <span class="text-xs text-ink-tertiary">{{ formatDate(order.created_at) }}</span>
             </div>
-            <div class="order-badges">
-              <span class="order-badge">{{ order.sale_status }}</span>
-              <span class="order-total">${{ Number(order.total || 0).toFixed(2) }}</span>
+            <div class="flex items-center gap-2.5">
+              <span class="text-[11px] font-semibold px-2 py-0.5 border border-border-subtle rounded-full text-ink-secondary bg-surface-bg">{{ order.sale_status }}</span>
+              <span class="text-sm font-bold text-ink font-mono">${{ Number(order.total || 0).toFixed(2) }}</span>
             </div>
           </div>
-          <div class="order-items">
-            <div v-for="item in order.items" :key="item.id" class="order-item-row">
-              <span>{{ item.product_name }} <span v-if="item.color || item.size" class="order-item-meta">({{ [item.color, item.size].filter(Boolean).join(' / ') }})</span> &times; {{ item.quantity }}</span>
-              <span>${{ Number(item.subtotal || 0).toFixed(2) }}</span>
+          <div class="flex flex-col gap-1 text-xs text-ink-secondary">
+            <div v-for="item in order.items" :key="item.id" class="flex justify-between items-center">
+              <span>{{ item.product_name }} <span v-if="item.color || item.size" class="text-ink-tertiary text-[11px]">({{ [item.color, item.size].filter(Boolean).join(' / ') }})</span> &times; {{ item.quantity }}</span>
+              <span class="font-mono">${{ Number(item.subtotal || 0).toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -144,7 +144,6 @@ const orders = ref<any[]>([])
 const loading = ref(true)
 const secLoading = ref(false)
 const secMessage = ref('')
-const telegramPayloadJson = ref('')
 const phoneForm = reactive({
   phone_number: '',
   otp_code: '',
@@ -315,75 +314,3 @@ function formatDate(iso?: string) {
   })
 }
 </script>
-
-<style scoped>
-.account-page { display: flex; flex-direction: column; gap: var(--space-4); }
-.account-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
-.account-title { font-size: 24px; font-weight: 700; color: var(--text-primary); }
-.account-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.btn-logout {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border: 1px solid var(--border-subtle, #e5e7eb);
-  border-radius: var(--radius-md); background: var(--surface-card);
-  font-size: 13px; font-weight: 600; color: var(--text-primary); cursor: pointer;
-}
-.profile-card {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--space-3); padding: var(--space-3);
-  background: var(--surface-card); border: 1px solid var(--border-subtle, #e5e7eb);
-  border-radius: var(--radius-lg);
-}
-.profile-item { display: flex; flex-direction: column; gap: 4px; }
-.profile-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
-.profile-val { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
-.verified-pill { font-size: 11px; font-weight: 600; padding: 1px 6px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: 999px; color: var(--text-secondary); }
-
-.security-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-3); }
-.security-box {
-  padding: var(--space-3); background: var(--surface-card);
-  border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-lg);
-  display: flex; flex-direction: column; gap: 10px;
-}
-.security-box__header { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
-.security-box__row { display: flex; align-items: center; gap: 8px; }
-.security-box__col { display: flex; flex-direction: column; gap: 8px; }
-.sec-input { flex: 1; height: 36px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 0 10px; font-size: 13px; font-family: monospace; }
-.sec-textarea { width: 100%; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); padding: 8px; font-size: 11px; font-family: monospace; }
-.sec-btn { height: 36px; padding: 0 12px; border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-md); background: var(--surface-card); font-size: 12px; font-weight: 600; cursor: pointer; }
-.sec-btn--primary { background: var(--text-primary); color: white; border: none; }
-.sec-msg { font-size: 12px; color: var(--text-secondary); }
-
-.orders-section { display: flex; flex-direction: column; gap: var(--space-2); }
-.section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; padding: 48px 16px; background: var(--surface-card);
-  border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-lg);
-  color: var(--text-secondary); font-size: 13px;
-}
-.btn-shop {
-  margin-top: 4px; padding: 8px 16px; border-radius: var(--radius-md);
-  background: var(--text-primary); color: white; font-size: 13px; font-weight: 600; text-decoration: none;
-}
-.orders-list { display: flex; flex-direction: column; gap: 12px; }
-.order-card {
-  padding: var(--space-3); background: var(--surface-card);
-  border: 1px solid var(--border-subtle, #e5e7eb); border-radius: var(--radius-lg);
-  display: flex; flex-direction: column; gap: 10px;
-}
-.order-card__top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle, #e5e7eb);
-}
-.order-inv { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-right: 10px; }
-.order-date { font-size: 12px; color: var(--text-tertiary); }
-.order-badges { display: flex; align-items: center; gap: 10px; }
-.order-badge {
-  font-size: 11px; font-weight: 600; padding: 2px 8px;
-  border: 1px solid var(--border-subtle, #e5e7eb); border-radius: 999px;
-}
-.order-total { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.order-items { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-secondary); }
-.order-item-row { display: flex; justify-content: space-between; }
-.order-item-meta { color: var(--text-tertiary); font-size: 12px; }
-</style>
